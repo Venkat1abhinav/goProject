@@ -8,34 +8,27 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type WorkOutHandler struct {
+type ProductInventoryHandler struct {
 }
 
-func NewWorkoutHandler() *WorkOutHandler {
-	return &WorkOutHandler{}
+func NewProductHander() *ProductInventoryHandler {
+	return &ProductInventoryHandler{}
 }
 
-func (wh *WorkOutHandler) HandleWorkoutById(w http.ResponseWriter, r *http.Request) {
+func (pi *ProductInventoryHandler) CreatProduct(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "the product has been invented\n")
+}
 
-	paramsWorkOutId := chi.URLParam(r, "id")
-
-	if paramsWorkOutId == "" {
+func (pi *ProductInventoryHandler) GetProductById(w http.ResponseWriter, r *http.Request) {
+	productParamsId := chi.URLParam(r, "id")
+	if productParamsId == "" {
 		http.NotFound(w, r)
 		return
 	}
-
-	workOutID, err := strconv.ParseInt(paramsWorkOutId, 10, 64)
-
+	pID, err := strconv.ParseInt(productParamsId, 10, 64)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-
-	fmt.Fprintf(w, "this the given workout id %d\n", workOutID)
-
-}
-
-func (wh *WorkOutHandler) CreateWorkOut(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Fprintf(w, "Workout has been created\n")
+	fmt.Fprintf(w, "the product has with ID: %d\n", pID)
 }

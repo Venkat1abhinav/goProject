@@ -12,14 +12,14 @@ import (
 )
 
 type Application struct {
-	Logger  *log.Logger
-	Workout *api.WorkOutHandler
-	DB      *sql.DB
+	Logger           *log.Logger
+	ProductInventory *api.ProductInventoryHandler
+	DB               *sql.DB
 }
 
 func NewApplication() (*Application, error) {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
-	workOut := api.NewWorkoutHandler()
+	productInventory := api.NewProductHander()
 	pgDB, error := store.Open()
 
 	if error != nil {
@@ -27,9 +27,9 @@ func NewApplication() (*Application, error) {
 	}
 
 	app := &Application{
-		Logger:  logger,
-		Workout: workOut,
-		DB:      pgDB,
+		Logger:           logger,
+		ProductInventory: productInventory,
+		DB:               pgDB,
 	}
 
 	return app, nil

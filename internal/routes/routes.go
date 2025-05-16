@@ -10,8 +10,8 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 
 	r.Get("/health", app.HealthCheck)
 	r.Get("/format", app.ReturnFormmatedData)
-	r.Get("/workouts", app.Workout.CreateWorkOut)
-	r.Get("/workouts/{id}", app.Workout.HandleWorkoutById)
+	r.Get("/products", app.ProductInventory.CreatProduct)
+	r.Get("/products/{id}", app.ProductInventory.GetProductById)
 
 	return r
 
