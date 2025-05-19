@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Go Project",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

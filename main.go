@@ -33,5 +33,6 @@ func main() {
 	err := server.ListenAndServe()
 	if err != nil {
 		app.Logger.Fatal(err)
+		return
 	}
 }

@@ -1,0 +1,42 @@
+meta {
+  name: requestion for post
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/products
+  body: json
+  auth: inherit
+}
+
+params:query {
+  : 
+}
+
+body:json {
+  {
+    "image_url": "https://example.com/image.jpg",
+    "display_name": "Wireless Headphones",
+    "rating": 4,
+    "description": "High-quality over-ear headphones with noise cancellation.",
+    "category": "Electronics",
+    "activation": true,
+    "entries": [
+      {
+        "quantity": 50,
+        "price": 9999,
+        "review": "Excellent sound quality and comfort.",
+        "warranty": "3600s",
+        "rating": 5
+      },
+      {
+        "quantity": 20,
+        "price": 8999,
+        "review": "Great value for the price.",
+        "warranty": "1800s",
+        "rating": 4
+      }
+    ]
+  }
+}
