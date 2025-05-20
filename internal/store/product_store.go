@@ -10,7 +10,7 @@ type Product struct {
 	ImageUrl    *string        `json:"image_url"`
 	DisplayName string         `json:"display_name"`
 	Rating      *int           `json:"rating"`
-	Description *string        `json:"description"`
+	Description string         `json:"description"`
 	Category    string         `json:"category"`
 	Activation  *bool          `json:"activation"`
 	Entries     []ProductEntry `json:"entries"`
@@ -19,7 +19,7 @@ type Product struct {
 type ProductEntry struct {
 	ID             int     `json:"id"`
 	Quantity       int     `json:"quantity"`
-	Price          int     `json:"price"`
+	Price          float32 `json:"price"`
 	Review         *string `json:"review"`
 	WarrantyPeriod *string `json:"warranty"`
 	Rating         *int    `json:"rating"`
@@ -36,6 +36,7 @@ func NewPostgresProductStore(db *sql.DB) *PostgresProductStore {
 type ProductStore interface {
 	CreateProduct(*Product) (*Product, error)
 	GetProductById(id int64) (*Product, error)
+	UpdateProduct(*Product) error
 }
 
 func (pg *PostgresProductStore) CreateProduct(product *Product) (*Product, error) {
@@ -85,6 +86,122 @@ func (pg *PostgresProductStore) CreateProduct(product *Product) (*Product, error
 }
 
 func (pg *PostgresProductStore) GetProductById(id int64) (*Product, error) {
+
 	product := &Product{}
+	query := `
+	SELECT id, display_name, rating, description, category, activation, image_url FROM products WHERE id = $1 
+	`
+
+	err := pg.db.QueryRow(query, id).Scan(&product.ID, &product.DisplayName, &product.Rating, &product.Description, &product.Category, &product.Activation, &product.ImageUrl)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	entryQuery := `
+	SELECT id, quantity, price, review, warranty_period, rating FROM product_entries 
+	WHERE product_id = $1
+	ORDER BY rating DESC
+	`
+
+	rows, err := pg.db.Query(entryQuery, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var entry ProductEntry
+
+		err = rows.Scan(
+			&entry.ID,
+			&entry.Quantity,
+			&entry.Price,
+			&entry.Review,
+			&entry.WarrantyPeriod,
+			&entry.Rating,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+		product.Entries = append(product.Entries, entry)
+	}
+
 	return product, nil
+}
+
+func (pg *PostgresProductStore) UpdateProduct(product *Product) error {
+
+	tx, err := pg.db.Begin()
+
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	query := `
+	UPDATE products
+	SET display_name = $1, rating = $2, description = $3, category = $4, activation = $5, image_url = $6
+	WHERE id = $7
+	`
+
+	result, err := tx.Exec(query, product.DisplayName, product.Rating, product.Description, product.Category, product.Activation, product.ImageUrl, product.ID)
+
+	if err != nil {
+		return err
+	}
+
+	rowsEffected, err := result.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	if rowsEffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	deleteQuery := `
+	DELETE FROM product_entries WHERE product_id = $1
+	`
+	_, err = tx.Exec(deleteQuery, product.ID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range product.Entries {
+		query = `
+		INSERT INTO product_entries (product_id, quantity, price, review, warranty_period, rating)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		`
+		_, err = tx.Exec(query,
+			product.ID,
+			entry.Quantity,
+			entry.Price,
+			entry.Review,
+			entry.WarrantyPeriod,
+			entry.Rating,
+		)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+
+	if err == nil {
+		return err
+	}
+
+	return nil
 }

@@ -1,0 +1,40 @@
+meta {
+  name: POST REQUEST TESTING
+  type: http
+  seq: 4
+}
+
+put {
+  url: http://localhost:8080/products/6
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "image_url": "https://example.com/images/keyboard.jpg",
+    "display_name": "Mechanical Keyboard",
+    "rating": 5,
+    "description": "A high-quality mechanical keyboard with RGB lighting.",
+    "category": "Electronics",
+    "activation": true,
+    "entries": [
+      {
+        "product_id": 8,
+        "quantity": 100,
+        "price": 7499,
+        "review": "5",
+        "warranty": "720:00:00",
+        "rating": null
+      },
+      {
+        "product_id": 9,
+        "quantity": 50,
+        "price": 6999,
+        "review": "4",
+        "warranty": "720:00:00",
+        "rating": null
+      }
+    ]
+  }
+}
