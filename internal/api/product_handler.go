@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -87,7 +88,7 @@ func (pi *ProductInventoryHandler) HandleUpdateProductInventory(w http.ResponseW
 	existingProduct, err := pi.ProductStore.GetProductById(pID)
 
 	if err != nil {
-		http.Error(w, "failed to fetch thw workout", http.StatusInternalServerError)
+		http.Error(w, "failed to fetch products", http.StatusInternalServerError)
 		return
 	}
 
@@ -115,25 +116,25 @@ func (pi *ProductInventoryHandler) HandleUpdateProductInventory(w http.ResponseW
 		return
 	}
 
-	if updateProductRequest.ImageUrl == nil {
+	if updateProductRequest.ImageUrl != nil {
 		existingProduct.ImageUrl = updateProductRequest.ImageUrl
 	}
-	if updateProductRequest.DisplayName == nil {
+	if updateProductRequest.DisplayName != nil {
 		existingProduct.DisplayName = *updateProductRequest.DisplayName
 	}
-	if updateProductRequest.Rating == nil {
+	if updateProductRequest.Rating != nil {
 		existingProduct.Rating = updateProductRequest.Rating
 	}
-	if updateProductRequest.Description == nil {
+	if updateProductRequest.Description != nil {
 		existingProduct.Description = *updateProductRequest.Description
 	}
-	if updateProductRequest.Category == nil {
+	if updateProductRequest.Category != nil {
 		existingProduct.Category = *updateProductRequest.Category
 	}
-	if updateProductRequest.Activation == nil {
+	if updateProductRequest.Activation != nil {
 		existingProduct.Activation = updateProductRequest.Activation
 	}
-	if updateProductRequest.Entries == nil {
+	if updateProductRequest.Entries != nil {
 		existingProduct.Entries = updateProductRequest.Entries
 	}
 
@@ -148,4 +149,34 @@ func (pi *ProductInventoryHandler) HandleUpdateProductInventory(w http.ResponseW
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(existingProduct)
+}
+
+func (pi ProductInventoryHandler) HandleDeleteById(w http.ResponseWriter, r *http.Request) {
+	productId := chi.URLParam(r, "id")
+	pID, err := strconv.ParseInt(productId, 10, 64)
+
+	if productId == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	err = pi.ProductStore.DeleteProduct(pID)
+	if err == sql.ErrNoRows {
+		fmt.Println(err)
+		http.Error(w, "failed to fetch the workout", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "failed to fetch the workout", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+
 }

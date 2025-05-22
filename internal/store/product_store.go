@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 )
@@ -37,6 +38,7 @@ type ProductStore interface {
 	CreateProduct(*Product) (*Product, error)
 	GetProductById(id int64) (*Product, error)
 	UpdateProduct(*Product) error
+	DeleteProduct(id int64) error
 }
 
 func (pg *PostgresProductStore) CreateProduct(product *Product) (*Product, error) {
@@ -88,14 +90,28 @@ func (pg *PostgresProductStore) CreateProduct(product *Product) (*Product, error
 func (pg *PostgresProductStore) GetProductById(id int64) (*Product, error) {
 
 	product := &Product{}
+
+	tx, err := pg.db.BeginTx(context.Background(), &sql.TxOptions{
+		ReadOnly: true,
+	})
+
+	if err != nil {
+		return product, err
+	}
+
 	query := `
 	SELECT id, display_name, rating, description, category, activation, image_url FROM products WHERE id = $1 
 	`
 
-	err := pg.db.QueryRow(query, id).Scan(&product.ID, &product.DisplayName, &product.Rating, &product.Description, &product.Category, &product.Activation, &product.ImageUrl)
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+	err = tx.QueryRow(query, id).Scan(&product.ID, &product.DisplayName, &product.Rating, &product.Description, &product.Category, &product.Activation, &product.ImageUrl)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, sql.ErrNoRows
 	}
 
 	if err != nil {
@@ -108,7 +124,7 @@ func (pg *PostgresProductStore) GetProductById(id int64) (*Product, error) {
 	ORDER BY rating DESC
 	`
 
-	rows, err := pg.db.Query(entryQuery, id)
+	rows, err := tx.Query(entryQuery, id)
 
 	if err != nil {
 		return nil, err
@@ -132,6 +148,12 @@ func (pg *PostgresProductStore) GetProductById(id int64) (*Product, error) {
 			return nil, err
 		}
 		product.Entries = append(product.Entries, entry)
+	}
+
+	err = tx.Commit()
+
+	if err != nil {
+		return product, err
 	}
 
 	return product, nil
@@ -199,9 +221,47 @@ func (pg *PostgresProductStore) UpdateProduct(product *Product) error {
 
 	err = tx.Commit()
 
-	if err == nil {
+	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (pg *PostgresProductStore) DeleteProduct(id int64) error {
+
+	tx, err := pg.db.Begin()
+
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	query := `
+	DELETE from products WHERE id = $1
+	`
+
+	result, err := tx.Exec(query, id)
+
+	if err != nil {
+		return err
+	}
+
+	res, err := result.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	if res == 0 {
+		return sql.ErrNoRows
+	}
+
+	err = tx.Commit()
+
+	if err != nil {
+		return err
+	}
 	return nil
 }

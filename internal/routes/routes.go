@@ -16,6 +16,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	r.Post("/products", app.ProductInventory.HandleCreateProductInventory)
 	r.Put("/products/{id}", app.ProductInventory.HandleUpdateProductInventory)
 
+	r.Delete("/products/{id}", app.ProductInventory.HandleDeleteById)
 	return r
 
 }

@@ -5,36 +5,35 @@ meta {
 }
 
 put {
-  url: http://localhost:8080/products/6
+  url: http://localhost:8080/products/8
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "image_url": "https://example.com/images/keyboard.jpg",
-    "display_name": "Mechanical Keyboard",
+    "image_url": "https://example.com/laptop.jpg",
+    "display_name": "Ultra Laptop X13",
     "rating": 5,
-    "description": "A high-quality mechanical keyboard with RGB lighting.",
+    "description": "High-performance laptop with 15-inch display and SSD storage.",
     "category": "Electronics",
     "activation": true,
     "entries": [
       {
-        "product_id": 8,
-        "quantity": 100,
-        "price": 7499,
-        "review": "5",
-        "warranty": "720:00:00",
-        "rating": null
+        "quantity": 30,
+        "price": 150000,
+        "review": "Perfect for developers and heavy workloads.",
+        "warranty": "7200s",
+        "rating": 5
       },
       {
-        "product_id": 9,
-        "quantity": 50,
-        "price": 6999,
-        "review": "4",
-        "warranty": "720:00:00",
-        "rating": null
+        "quantity": 10,
+        "price": 135000,
+        "review": "Sleek design with solid performance.",
+        "warranty": "3600s",
+        "rating": 4
       }
     ]
   }
+  
 }
